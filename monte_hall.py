@@ -105,7 +105,7 @@ def getSwitchedDoor(revealed_door : int, selected_door : int) -> int:
     return new_selection
 
 
-def runTrials(switch : bool, total_trails : int = 10000) -> float :
+def runTrials(switch : bool, total_trials : int = 10000) -> float :
     """
     Perform Monte Carlo trials using the MonteHall random experiment. These trails will be run
     for two cases: the player switches their door when the other door is revealed and the player
@@ -118,62 +118,116 @@ def runTrials(switch : bool, total_trails : int = 10000) -> float :
     True if the player will switch, false if the player will remain with their respective door.
     """
     total_wins : int = 0
-    for _ in range(total_trails):
+    for _ in range(total_trials):
         win : bool = monteHall(switch)
         if (win):
             total_wins += 1
 
-    return total_wins / total_trails
+    return total_wins / total_trials
 
-def Bayesian(switch : bool) : 
+def Bayesian(switch : bool) -> float: 
     """
+    It is worth restating that, in the standard Monty Hall problem:
+    - The prize is equally likely to be behind any door.
+    - The player initially chooses a door without information.
+    - The host follows the same rule regardless of which door is chosen.
+
+    Hence, the game is invariant under relabeling the doors. This means
+    that if we fix the players choice, and calculate its probabilities, we do not 
+    lose generality.
+
+    With that said, lets assume that the player chooses door 1. We now want to calculate
+    the probability that the prize is behind door 1.
 
     The following definitions will be used:
-    - X : Door X that the player selected that the player believes has the prize behind it.
+    - X : Door X that the prize behind.
     - Y : Door Y that the host reveals does not contain the prize. Note that X != Y.
 
     We are interested in calculating:
-    - P(X | Y) : The probability that the door that the player selected contains the prize 
-    given that the host revealed the door that does not contain the prize.
+    - P(X | Y) : The probability that the door X prize contains the prize given
+    that the host revealed door Y does not contain the prize.
+    
     To do this we need to utilise Bayes theorem which states:
-    - P(X | Y) = (P(Y | X) * P(X)) / p(Y)
+    - P(X | Y) = (P(Y | X) * P(X)) / P(Y)
     where
-    - P(X) : Prior Probability that the door that the player selected has the prize behind it.
-    - P(Y) : Probability that the host reveals the door that they revealed
-    - P(Y | X) : 
+    - P(X) : Prior probability that the door that the prize is behind door X.
+    - P(Y) : Probability that the host reveals door Y out of the two remaining doors.
+    - P(Y | X) : Probability that the host reveals the door Y given that door X has the prize.
     """
 
-    """ The player makes a selection of one of the three doors. The probability of the prize 
-    being behind any one of the three doors is assumed to be equal. Therefore, the prior 
-    probability that the door selected by the player has the prize is calculated as 1/3:
+    """ The player makes a selection of one of the three doors. In our example, we say door 1.
+    The probability of the prize being behind any one of the three doors is assumed to be equal. 
+    Therefore, the prior probability that the door selected by the player has the prize is
+    calculated as: P(X) = 1/3
     """
     prior : float = 1 / 3
     
     """ The player now selects a door and the host reveals whats inside one of the two remaining doors 
     that does not contain the prize. We now need to compute the likelihood of the host revealing that specific door 
-    not containing the prize given that the initial door selected by the player contains the prize.
+    not containing the prize given that the initial door selected by the player is Door 1. We note that in order to 
+    compute the probability of door Y being revealed given that the player selected door 1, we must compute 
+    the probability of door Y being revealed given all possible combinations of where the prize is.
 
-    Given that that the player has selected the correct door containing the prize, 
-    either of the the remaining two door could be selected by the host at equal probability 
-    (since both doors aren't the door the player selected and both don't contain the prize). 
-    Therefore the likelihood that the host revealed the specific door not containing the prize is 1/2.
+    Therefore the likelihood that the host revealed the specific door not containing the prize: P(Y | X) = 1/2.
     """
     likelihood : float = 1 / 2
     
-    """ The product of the prior and the likelihood now need to normalised by the probability that the 
-    specific door """
+    """ The numerator, defined by the product of the prior and the likelihood, P(Y | X) * P (X), needs to normalised by 
+    the probability that door Y gets choosen. Using the law of total probability, the probablity of door Y getting choosen
+    can be found by considering the sum of Y getting choosen and all the doors that could contain the prize. Recall
+    that the door opened can't the one the player chose or the one with the prize. For example, let's assume the player selected door 1,
+    then the probability of door 2 being opened by the host can be calculated as:
+        P(Y = 2) = P(Y=2 | X=1) * P(X=1) + P(Y=2 | X=2) * P(X=2) + P(Y=2 | X=3) * P(X=3)
+             = 1/2 * 1/3 + 0 * 1/3 + 1 * 1/3
+             = 1/6 + 1/3
+             = 1/2
+    Notice how to P(Y=2 | X=2) = 0, due to the fact that the host can't open a door that contains the prize, and 
+    P(Y=2 | X=3) = 1, for the same reason, but also applying the constraint that door 1 can't be picked either,
+    since that is the one the player picked, meaning that door 2 is the only option, makings its probability 1.
+    """
+    normalization : float = 1/2
     
+    """ Using Bayes theorem, the probablity that the player selected the correct door given the that the host opened up door
+    Y can be calculated as follows. However, not that if we calculate the closed for solution for Bayes theorem in this 
+    context, we get:
+        P(X | Y) = (1/2 * 1/3) / 1/2
+                 = 1/3
+    """
+    probability : float = (likelihood * prior) / normalization
 
-switch_win_rate = runTrials(switch = True)
-stay_win_rate = runTrials(switch = False)
+    """ If the player chooses not to switch, then return the probability that the prize is under the players choice. 
+    Note that if the play chooses not to switch, then the probability that their choice contains the prize is equal
+    to prior probability that their choice contained the prize. It is effectively as though you ignored the new 
+    information.
+    """
+    if not switch:
+        return  probability
+
+    """ If the player switches, the probability that the switched door contains the prize is equal to the complement
+    of the prior probability (1 - P(X | Y)), since their are only two doors to choose from (stay or switch), therefore,
+    these two outcomes partition the probability space:
+    """
+    return 1 - probability
+
+total_trials : int = 10000
+switch_win_rate = runTrials(switch = True, total_trials=total_trials)
+stay_win_rate = runTrials(switch = False, total_trials=total_trials)
 
 fig, ax = plt.subplots(nrows=2, ncols=2)
-ax[0].set_title("Win-to-loss percentage when switching")
-ax[0].pie([switch_win_rate, 1 - switch_win_rate], labels=["win", "loss"], autopct="%1.1f%%")
+fig.suptitle("Win-to-loss percentages in the Monty Hall problem")
 
-ax[1].set_title("Win-to-loss percentage when staying with original choice")
-ax[1].pie([stay_win_rate, 1 - stay_win_rate], labels=["win", "loss"], autopct="%1.1f%%")
+ax[0,0].set_title("When switching")
+ax[0,1].set_title("When staying with original choice")
 
-ax[2].set_title("Theoretical win-to-loss percentage when switch")
-ax[2].pie([switch_win_rate, 1 - switch_win_rate], labels=["win", "loss"], autopct="%1.1f%%")
+ax[0,0].set_ylabel("Empirical: " + str(total_trials) + " trials")
+ax[1,0].set_ylabel("Theoretical")
+
+ax[0,0].pie([switch_win_rate, 1 - switch_win_rate], labels=["win", "loss"], autopct="%1.1f%%")
+ax[0,1].pie([stay_win_rate, 1 - stay_win_rate], labels=["win", "loss"], autopct="%1.1f%%")
+
+switch_win_rate = Bayesian(switch = True)
+stay_win_rate = Bayesian(switch = False)
+
+ax[1,0].pie([switch_win_rate, 1 - switch_win_rate], labels=["win", "loss"], autopct="%1.1f%%")
+ax[1,1].pie([stay_win_rate, 1 - stay_win_rate], labels=["win", "loss"], autopct="%1.1f%%")
 plt.show()
