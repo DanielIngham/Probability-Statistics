@@ -3,6 +3,7 @@ A repository containing python implementations and visualisations for fundamenta
 
 Concepts covered in this repository include: 
 - [Importance Sampling](#Importance-Sampling)
+- [Monte Hall Problem](#Monte-Hall)
 
 ## Importance Sampling
 
@@ -21,3 +22,5 @@ The following python implementation creates a Monte Carlo simulation of the Mont
 2. the contestant stays with their initial choice.
 
 Additionally, the Python code includes an implementation of the Bayesian calculation, with explanations of each step used to derive the theoretical probabilities of these two strategies. The graph below illustrates the win-loss percentages of both strategies as well as expected percentages given the Bayesian formulation.
+
+![Monte Hall](./docs/readme/monte_hall_10000.png)
