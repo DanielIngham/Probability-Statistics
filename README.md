@@ -5,7 +5,7 @@ Concepts covered in this repository include:
 - [Importance Sampling](#Importance-Sampling)
 - [Monte Hall Problem](#Monte-Hall)
 - [Conjugate Priors](#Conjugate-Priors)
--- [Beta-Binomial Conjugate Pair](#Beta-Binomial-Conjugate-Pair)
+  - [Beta-Binomial Conjugate Pair](#Beta-Binomial-Conjugate-Pair)
 
 ## Importance Sampling
 
