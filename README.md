@@ -4,6 +4,8 @@ A repository containing python implementations and visualisations for fundamenta
 Concepts covered in this repository include: 
 - [Importance Sampling](#Importance-Sampling)
 - [Monte Hall Problem](#Monte-Hall)
+- [Conjugate Priors](#Conjugate-Priors)
+-- [Beta-Binomial Conjugate Pair](#Beta-Binomial-Conjugate-Pair)
 
 ## Importance Sampling
 
@@ -24,3 +26,8 @@ The following python implementation creates a Monte Carlo simulation of the Mont
 Additionally, the Python code includes an implementation of the Bayesian calculation, with explanations of each step used to derive the theoretical probabilities of these two strategies. The graph below illustrates the win-loss percentages of both strategies and expected percentages given the Bayesian formulation.
 
 ![Monte Hall](./docs/readme/monte_hall_10000.png)
+
+## Conjugate Priors
+### Beta-Binomial Conjugate Pair
+The beta distribution is a conjugate prior when paired with a binomial likelihood function. The following example showcases utilising a beta prior distribution infer the probability of observing a head after a fair coin is flipped. The figure below showcases the probability of heads, updated after each observed coin flip, for 1000 coin flips.
+![BetaBinomial](./docs/readme/beta_bino_conj_1000.png)
